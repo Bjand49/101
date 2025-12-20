@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../OneZeroOne.Core/OneZeroOne.Core.csproj" />
+  <Project Path="../OneZeroOne.Tests/OneZeroOne.Tests.csproj" />
+  <Project Path="OneZeroOne.Web.csproj" />
+</Solution>
