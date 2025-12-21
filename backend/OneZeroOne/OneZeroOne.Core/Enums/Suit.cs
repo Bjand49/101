@@ -4,7 +4,7 @@ using System.Text;
 
 namespace OneZeroOne.Core.Enums
 {
-    public enum Colors
+    public enum Suit
     {
         Unknown = 0,
         Hearts = 1,

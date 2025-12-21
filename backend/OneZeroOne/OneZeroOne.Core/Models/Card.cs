@@ -5,5 +5,5 @@ using System.Text;
 
 namespace OneZeroOne.Core.Models
 {
-    public record Card(byte Number, Colors Color);
+    public record Card(byte Number, Suit Suit);
 }

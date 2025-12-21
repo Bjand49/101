@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OneZeroOne.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,10 +7,35 @@ namespace OneZeroOne.Core.Models
 {
     public class Game
     {
+        public Game()
+        {
+            // Create a 104-card deck
+            for (byte number = 1; number <= 13; number++)
+            {
+                Cards.Add(new Card(number, Suit.Hearts));
+                Cards.Add(new Card(number, Suit.Diamonds));
+                Cards.Add(new Card(number, Suit.Clubs));
+                Cards.Add(new Card(number, Suit.Spades));
+                
+                Cards.Add(new Card(number, Suit.Hearts));
+                Cards.Add(new Card(number, Suit.Diamonds));
+                Cards.Add(new Card(number, Suit.Clubs));
+                Cards.Add(new Card(number, Suit.Spades));
+            }
+
+            // Shuffle the deck using Fisher-Yates algorithm
+            var random = Random.Shared;
+            for (int i = Cards.Count - 1; i > 0; i--)
+            {
+                var j = random.Next(i + 1);
+                (Cards[i], Cards[j]) = (Cards[j], Cards[i]);
+            }
+        }
         public Guid Id { get; set; } = Guid.NewGuid();
         public List<Player> Players { get; set; } = new List<Player>();
-        public Deck Deck { get; set; } = new Deck();
         public Guid ActivePlayerId { get; set; }
+        public List<Card> Cards { get; private set; } = new List<Card>();
+
         public Result<Card> DrawCard(Guid playerId, Guid? discardPilePlayer = null)
         {
             var player = Players.Find(p => p.Id == playerId);
@@ -78,7 +104,7 @@ namespace OneZeroOne.Core.Models
             }
             return Result<List<Card>>.Success(player.Hand);
         }
-        public Result<Guid> StartGame ()
+        public Result<Guid> StartGame()
         {
             if (Players.Count < 2)
             {
@@ -106,15 +132,16 @@ namespace OneZeroOne.Core.Models
         private Result<Card> DrawCardFromDeck()
         {
 
-            if (Deck.Cards.Count == 0)
+            if (Cards.Count == 0)
             {
-                return Result<Card>.Failure("No cards left in the deck");
+                return Result<Card>.Failure("The deck is empty.");
             }
-            else
-            {
-                return Deck.DrawCard();
-            }
+
+            var card = Cards[0];
+            Cards.RemoveAt(0);
+            return Result<Card>.Success(card);
         }
+
         private Result<Card> DrawCardFromPlayerDiscardPile(Guid player, Guid discardPilePlayer)
         {
             var playerIndex = Players.Select((p, index) => new { p, Index = index });

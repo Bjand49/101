@@ -1,5 +1,6 @@
 using OneZeroOne.Core;
 using OneZeroOne.Core.Models;
+using OneZeroOne.Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,5 +66,6 @@ app.MapPost("/games/{gameId}/{playerId}/hand/draw", (Guid gameId, Guid playerId,
 {
     return Results.Ok(gameManager.DrawCard(gameId, playerId));
 });
+app.MapHub<GameHub>("/hubby");
 
 app.Run();

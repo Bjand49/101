@@ -39,7 +39,7 @@ namespace OneZeroOne.Tests
             var player1 = player1Result.Value!;
             var player2 = player2Result.Value!;
 
-            var testCard = new Card(5, Colors.Hearts);
+            var testCard = new Card(5, Suit.Hearts);
             player1.DiscardPile.Add(testCard);
 
             game.ActivePlayerId = player2.Id;
@@ -110,7 +110,7 @@ namespace OneZeroOne.Tests
             var player3 = player3Result.Value!;
 
             // Player 3 discards a card
-            var testCard = new Card(7, Colors.Clubs);
+            var testCard = new Card(7, Suit.Clubs);
             player3.DiscardPile.Add(testCard);
 
             // Set Player 2 as active
@@ -138,7 +138,7 @@ namespace OneZeroOne.Tests
             var player3 = player3Result.Value!;
 
             // Player 3 (last player) discards a card
-            var testCard = new Card(10, Colors.Diamonds);
+            var testCard = new Card(10, Suit.Diamonds);
             player3.DiscardPile.Add(testCard);
 
             // Set Player 1 as active (first player should be able to draw from last player)
@@ -164,9 +164,9 @@ namespace OneZeroOne.Tests
             var player2 = player2Result.Value!;
 
             // Player 1 discards multiple cards
-            var card1 = new Card(3, Colors.Hearts);
-            var card2 = new Card(7, Colors.Spades);
-            var topCard = new Card(10, Colors.Diamonds);
+            var card1 = new Card(3, Suit.Hearts);
+            var card2 = new Card(7, Suit.Spades);
+            var topCard = new Card(10, Suit.Diamonds);
             player1.DiscardPile.Add(card1);
             player1.DiscardPile.Add(card2);
             player1.DiscardPile.Add(topCard);
