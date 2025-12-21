@@ -69,6 +69,39 @@ namespace OneZeroOne.Core.Models
             Players.Add(player);
             return Result<Player>.Success(player);
         }
+        public Result<List<Card>> GetPlayerHand(Guid playerId)
+        {
+            var player = Players.Find(p => p.Id == playerId);
+            if (player == null)
+            {
+                return Result<List<Card>>.Failure("Player not found");
+            }
+            return Result<List<Card>>.Success(player.Hand);
+        }
+        public Result<Guid> StartGame ()
+        {
+            if (Players.Count < 2)
+            {
+                return Result<Guid>.Failure("Not enough players to start the game");
+            }
+            ActivePlayerId = Players[0].Id;
+            foreach (var player in Players)
+            {
+                for (int i = 0; i < 14; i++)
+                {
+                    var cardResult = DrawCardFromDeck();
+                    if (cardResult.IsSuccess)
+                    {
+                        player.AddCardToHand(cardResult.Value!);
+                    }
+                    else
+                    {
+                        return Result<Guid>.Failure("Not enough cards in the deck to deal to players");
+                    }
+                }
+            }
+            return Result<Guid>.Success(ActivePlayerId);
+        }
 
         private Result<Card> DrawCardFromDeck()
         {
