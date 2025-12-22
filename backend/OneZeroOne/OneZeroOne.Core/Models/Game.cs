@@ -86,13 +86,12 @@ namespace OneZeroOne.Core.Models
             return Result<Card>.Success(card);
         }
 
-        public Result<Player> AddPlayer(string? name)
+        public Result<Player> AddPlayer(Player player)
         {
             if (Players.Count >= 4)
             {
                 return Result<Player>.Failure("Game is full");
             }
-            var player = new Player(name);
             Players.Add(player);
             return Result<Player>.Success(player);
         }

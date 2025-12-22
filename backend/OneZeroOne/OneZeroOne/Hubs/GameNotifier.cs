@@ -32,7 +32,7 @@ namespace OneZeroOne.Web.Hubs
             {
                 return;
             }
-            await _hub.Clients.All.SendAsync("UserJoinedGroup", game.Players.Count, gameId);
+            await _hub.Clients.All.SendAsync("UserJoinedGroup", game.Players, gameId);
         }
 
     }

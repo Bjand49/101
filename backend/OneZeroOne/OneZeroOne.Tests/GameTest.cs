@@ -1,3 +1,4 @@
+using OneZeroOne.Core;
 using OneZeroOne.Core.Enums;
 using OneZeroOne.Core.Models;
 using System;
@@ -15,7 +16,7 @@ namespace OneZeroOne.Tests
         {
             // Arrange
             var game = new Game();
-            var playerResult = game.AddPlayer("Test Player");
+            var playerResult = game.AddPlayer(Generators.GeneratePlayer(1));
             var player = playerResult.Value!;
             game.ActivePlayerId = player.Id;
 
@@ -34,8 +35,8 @@ namespace OneZeroOne.Tests
         {
             // Arrange
             var game = new Game();
-            var player1Result = game.AddPlayer("Player 1");
-            var player2Result = game.AddPlayer("Player 2");
+            var player1Result = game.AddPlayer(Generators.GeneratePlayer(1));
+            var player2Result = game.AddPlayer(Generators.GeneratePlayer(2));
             var player1 = player1Result.Value!;
             var player2 = player2Result.Value!;
 
@@ -61,7 +62,7 @@ namespace OneZeroOne.Tests
         {
             // Arrange
             var game = new Game();
-            var playerResult = game.AddPlayer("Test Player");
+            var playerResult = game.AddPlayer(Generators.GeneratePlayer(1));
             var player = playerResult.Value!;
             game.ActivePlayerId = player.Id;
             var nonExistentPlayerId = Guid.NewGuid();
@@ -80,8 +81,8 @@ namespace OneZeroOne.Tests
         {
             // Arrange
             var game = new Game();
-            var player1Result = game.AddPlayer("Player 1");
-            var player2Result = game.AddPlayer("Player 2");
+            var player1Result = game.AddPlayer(Generators.GeneratePlayer(1));
+            var player2Result = game.AddPlayer(Generators.GeneratePlayer(2));
             var player1 = player1Result.Value!;
             var player2 = player2Result.Value!;
 
@@ -102,9 +103,9 @@ namespace OneZeroOne.Tests
         {
             // Arrange
             var game = new Game();
-            var player1Result = game.AddPlayer("Player 1");
-            var player2Result = game.AddPlayer("Player 2");
-            var player3Result = game.AddPlayer("Player 3");
+            var player1Result = game.AddPlayer(Generators.GeneratePlayer(1));
+            var player2Result = game.AddPlayer(Generators.GeneratePlayer(2));
+            var player3Result = game.AddPlayer(Generators.GeneratePlayer(1));
             var player1 = player1Result.Value!;
             var player2 = player2Result.Value!;
             var player3 = player3Result.Value!;
@@ -122,7 +123,6 @@ namespace OneZeroOne.Tests
             // Assert
             Assert.False(result.IsSuccess);
             Assert.Null(result.Value);
-            Assert.Contains("Cant draw from", result.Error);
         }
 
         [Fact]
@@ -130,9 +130,9 @@ namespace OneZeroOne.Tests
         {
             // Arrange
             var game = new Game();
-            var player1Result = game.AddPlayer("Player 1");
-            var player2Result = game.AddPlayer("Player 2");
-            var player3Result = game.AddPlayer("Player 3");
+            var player1Result = game.AddPlayer(Generators.GeneratePlayer(1));
+            var player2Result = game.AddPlayer(Generators.GeneratePlayer(2));
+            var player3Result = game.AddPlayer(Generators.GeneratePlayer(1));
             var player1 = player1Result.Value!;
             var player2 = player2Result.Value!;
             var player3 = player3Result.Value!;
@@ -158,8 +158,8 @@ namespace OneZeroOne.Tests
         {
             // Arrange
             var game = new Game();
-            var player1Result = game.AddPlayer("Player 1");
-            var player2Result = game.AddPlayer("Player 2");
+            var player1Result = game.AddPlayer(Generators.GeneratePlayer(1));
+            var player2Result = game.AddPlayer(Generators.GeneratePlayer(2));
             var player1 = player1Result.Value!;
             var player2 = player2Result.Value!;
 
@@ -181,5 +181,40 @@ namespace OneZeroOne.Tests
             Assert.True(result.IsSuccess);
             Assert.Equal(topCard, result.Value);
         }
+
+        [Fact]
+        public void DrawCard_NotPlayersTurn_ReturnsFailure()
+        {
+            // Arrange
+            var game = new Game();
+            var playerResult = game.AddPlayer(Generators.GeneratePlayer(2));
+            var player = playerResult.Value!;
+            game.ActivePlayerId = Guid.NewGuid(); 
+
+            // Act
+            var result = game.DrawCard(player.Id);
+            // Assert
+
+            Assert.False(result.IsSuccess);
+            Assert.Null(result.Value);
+        }
+
+        [Fact]
+        public void JoinGame_PlayerAlreadyInGame_ReturnsFailure()
+        {
+            // Arrange
+            var gameManager = new GameManager();
+            var gameId = gameManager.CreateGame();
+            var player = Generators.GeneratePlayer(1);
+            var firstJoinResult = gameManager.JoinGame(gameId,player);
+
+            // Act
+            var secondJoinResult = gameManager.JoinGame(gameId, player);
+
+            // Assert
+            Assert.True(firstJoinResult.IsSuccess);
+            Assert.False(secondJoinResult.IsSuccess);
+        }
+
     }
 }

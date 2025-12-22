@@ -1,4 +1,5 @@
 ﻿using OneZeroOne.Core;
+using OneZeroOne.Core.Models;
 using OneZeroOne.Web.Hubs;
 
 namespace OneZeroOne.Web.Controllers
@@ -43,9 +44,9 @@ namespace OneZeroOne.Web.Controllers
                 return Results.Ok(games);
             });
 
-            app.MapPost("/games/{gameId}/player", async (Guid gameId, string name, GameManager gameManager, GameNotifier notifier) =>
+            app.MapPost("/games/{gameId}/player", async (GameManager gameManager, GameNotifier notifier, Guid gameId, Player player) =>
             {
-                var result = gameManager.JoinGame(gameId, name);
+                var result = gameManager.JoinGame(gameId, player);
 
                 if (!result.IsSuccess)
                 {

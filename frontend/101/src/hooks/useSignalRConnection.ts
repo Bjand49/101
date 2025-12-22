@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { startConnection, on, off } from '../services/signalRService';
+import type { Player } from '../models/Player';
 
 interface SignalRHandlers {
     onGameCreated?: (gameId: string) => Promise<void>;
-    onUserJoinedGroup?: (count: number, gameId: string) => Promise<void>;
+    onUserJoinedGroup?: (players: Player[], gameId: string) => Promise<void>;
 }
 
 export const useSignalRConnection = (handlers: SignalRHandlers) => {

@@ -60,14 +60,18 @@ namespace OneZeroOne.Core
             return game.PlayCard(playerId, card);
         }
 
-        public Result<Player> JoinGame(Guid gameId, string? name)
+        public Result<Player> JoinGame(Guid gameId, Player player)
         {
             var game = GetGame(gameId);
             if (game == null)
             {
                 return Result<Player>.Failure("Game not found");
             }
-            return game.AddPlayer(name);
+            else if(game.Players.Any(x=> x.Id == player.Id))
+            {
+                return Result<Player>.Failure("Player already in game");
+            }
+            return game.AddPlayer(player);
         }
 
         public Result<Guid> StartGame (Guid gameId)

@@ -9,8 +9,8 @@ namespace OneZeroOne.Tests
         {
             // Arrange 
             var game = new Game();
-            var player1 = game.AddPlayer("player1").Value;
-            game.AddPlayer("player2");
+            var player1 = game.AddPlayer(Generators.GeneratePlayer(1)).Value;
+            game.AddPlayer(Generators.GeneratePlayer(2));
             game.StartGame();
             var cardsDrawn = new List<Card?>();
 
@@ -31,8 +31,8 @@ namespace OneZeroOne.Tests
         {
             // Arrange 
             var game = new Game();
-            var player1 = game.AddPlayer("player1").Value;
-            game.AddPlayer("player2");
+            var player1 = game.AddPlayer(Generators.GeneratePlayer(1)).Value;
+            game.AddPlayer(Generators.GeneratePlayer(2));
             game.StartGame();
             var cardsDrawn = new List<Card?>();
 
