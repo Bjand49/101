@@ -6,37 +6,34 @@ export interface Response<T> {
 
 class ApiClient {
   public apiClient: AxiosInstance | undefined;
-  
+
   private getClient(): AxiosInstance {
     let baseurl = "http://localhost:5093";
     const envBaseUrl = import.meta.env.VITE_BASE_URL;
 
-    if(envBaseUrl)
-    {
+    if (envBaseUrl) {
       baseurl = envBaseUrl;
     }
 
 
-    if (!this.apiClient) {
-      this.apiClient = axios.create({
-        baseURL: baseurl,
-        timeout: 10000,
-        headers: this.getHeaders()
-        
-      });
-    }
+    this.apiClient ??= axios.create({
+      baseURL: baseurl,
+      timeout: 10000,
+      headers: this.getHeaders()
+
+    });
     return this.apiClient;
   }
 
   private getHeaders() {
     const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "test-header": "test-header-value"
+      "Content-Type": "application/json",
+      "test-header": "test-header-value"
     };
     return headers;
-}
+  }
 
-  
+
 
   async get<T>(url: string): Promise<Response<T>> {
     try {
@@ -51,15 +48,15 @@ class ApiClient {
 
   async post<TBody, TReturn>(url: string, body: TBody): Promise<Response<TReturn>> {
     try {
-        const response = await this.getClient().post<TReturn>(`${url}`, body, {
-            headers: this.getHeaders(),
-        });
-        return { data: response.data, error: null };
+      const response = await this.getClient().post<TReturn>(`${url}`, body, {
+        headers: this.getHeaders(),
+      });
+      return { data: response.data, error: null };
     } catch (error: any) {
-        console.error("Error making POST request:", error);
-        return { data: undefined, error: error };
+      console.error("Error making POST request:", error);
+      return { data: undefined, error: error };
     }
-}
+  }
 
 
   // put method

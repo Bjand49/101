@@ -80,5 +80,10 @@ namespace OneZeroOne.Core
             return game.StartGame();
         }
 
+        public void Reset()
+        {
+            _games.Clear();
+        }
+
     }
 }

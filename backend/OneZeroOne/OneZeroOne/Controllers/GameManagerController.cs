@@ -57,6 +57,14 @@ namespace OneZeroOne.Web.Controllers
 
             });
 
+            app.MapPost("/games/clear", async (GameManager gameManager) =>
+            {
+                gameManager.Reset();
+                return Results.Ok();
+
+            });
+
+
 
         }
     }
