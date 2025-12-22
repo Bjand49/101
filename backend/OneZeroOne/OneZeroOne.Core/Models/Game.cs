@@ -9,7 +9,7 @@ namespace OneZeroOne.Core.Models
     {
         public Game()
         {
-            // Create a 104-card deck
+            // Create a deck with 2 decks (104 cards)
             for (byte number = 1; number <= 13; number++)
             {
                 Cards.Add(new Card(number, Suit.Hearts));
@@ -23,7 +23,7 @@ namespace OneZeroOne.Core.Models
                 Cards.Add(new Card(number, Suit.Spades));
             }
 
-            // Shuffle the deck using Fisher-Yates algorithm
+            // Shuffle the deck using Fisher-Yates algorithm (AI Generated)
             var random = Random.Shared;
             for (int i = Cards.Count - 1; i > 0; i--)
             {
@@ -35,6 +35,7 @@ namespace OneZeroOne.Core.Models
         public List<Player> Players { get; set; } = new List<Player>();
         public Guid ActivePlayerId { get; set; }
         public List<Card> Cards { get; private set; } = new List<Card>();
+        public int ActivePlayers  => Players.Count;
 
         public Result<Card> DrawCard(Guid playerId, Guid? discardPilePlayer = null)
         {

@@ -28,6 +28,10 @@ namespace OneZeroOne.Core
         public IEnumerable<Game> GetGames() {
             return _games.Values;
         }
+        public IEnumerable<Guid> GetGameIds()
+        {
+            return _games.Values.Select(x=> x.Id);
+        }
         public Result<Card> DrawCard (Guid gameId, Guid playerId, Guid? discardPilePlayer = null)
         {
             var game = GetGame(gameId);
@@ -56,7 +60,7 @@ namespace OneZeroOne.Core
             return game.PlayCard(playerId, card);
         }
 
-        public Result<Player> AddPlayer(Guid gameId, string? name)
+        public Result<Player> JoinGame(Guid gameId, string? name)
         {
             var game = GetGame(gameId);
             if (game == null)

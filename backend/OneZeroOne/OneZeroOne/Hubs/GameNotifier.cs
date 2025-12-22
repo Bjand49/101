@@ -1,0 +1,39 @@
+﻿using Microsoft.AspNetCore.SignalR;
+using OneZeroOne.Core;
+
+namespace OneZeroOne.Web.Hubs
+{
+    public class GameNotifier(IHubContext<GameHub> _hub, GameManager manager)
+    {
+        private static readonly string GET_ALL_GAME_UPDATES_GROUP = "GetAllGameUpdatesGroup";
+        private static readonly string GET_SPECIFIC_GAME_UPDATES_GROUP = "GetGameUpdatesGroup";
+        public static readonly string[] ALL_GROUPS = new string[]
+        {
+            GET_ALL_GAME_UPDATES_GROUP,
+            GET_SPECIFIC_GAME_UPDATES_GROUP
+        };
+
+        public async Task SendGameStartedMessage(Guid id)
+        {
+            var name = GET_SPECIFIC_GAME_UPDATES_GROUP + id;
+            await _hub.Clients.All.SendAsync("YourGameStarted");
+            await _hub.Clients.All.SendAsync("GameStarted", id);
+        }
+
+        public async Task SendGameCreatedMessage(Guid id)
+        {
+            await _hub.Clients.All.SendAsync("GameCreated", id);
+        }
+
+        public async Task SendJoinUpdates(Guid gameId)
+        {
+            var game = manager.GetGame(gameId);
+            if (game == null)
+            {
+                return;
+            }
+            await _hub.Clients.All.SendAsync("UserJoinedGroup", game.Players.Count, gameId);
+        }
+
+    }
+}
