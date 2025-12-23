@@ -25,14 +25,14 @@ namespace OneZeroOne.Web.Hubs
             await _hub.Clients.All.SendAsync("GameCreated", id);
         }
 
-        public async Task SendJoinUpdates(Guid gameId)
+        public async Task GamePlayerUpdate(Guid gameId)
         {
             var game = manager.GetGame(gameId);
             if (game == null)
             {
                 return;
             }
-            await _hub.Clients.All.SendAsync("UserJoinedGroup", game.Players, gameId);
+            await _hub.Clients.All.SendAsync("GamePlayerUpdate", game.Players, gameId);
         }
 
     }

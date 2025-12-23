@@ -21,7 +21,10 @@ export const getGame = (gameId: string) =>
 export const startGame = (gameId: string) =>
   apiClient.post<undefined, Game>(`/games/${gameId}/start`, undefined);
 
-// POST /games/${gameId}/player?name=${name}
+// POST /games/${gameId}/join
 export const joinGame = (gameId: string, player : Player) =>
-  apiClient.post<Player, Game>(`/games/${gameId}/player`, player);
+  apiClient.post<Player, Player>(`/games/${gameId}/join`, player);
 
+// POST /games/${gameId}/leave
+export const leaveGame = (gameId: string, playerId : string) =>
+  apiClient.post<string, Player>(`/games/${gameId}/leave`, playerId);

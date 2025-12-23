@@ -44,7 +44,7 @@ namespace OneZeroOne.Web.Controllers
                 return Results.Ok(games);
             });
 
-            app.MapPost("/games/{gameId}/player", async (GameManager gameManager, GameNotifier notifier, Guid gameId, Player player) =>
+            app.MapPost("/games/{gameId}/join", async (GameManager gameManager, GameNotifier notifier, Guid gameId, Player player) =>
             {
                 var result = gameManager.JoinGame(gameId, player);
 
@@ -53,7 +53,21 @@ namespace OneZeroOne.Web.Controllers
                     // Notify all clients in this game's group that a new player has joined
                     return Results.BadRequest(result.Error);
                 }
-                await notifier.SendJoinUpdates(gameId);
+                await notifier.GamePlayerUpdate(gameId);
+                return Results.Ok(result);
+
+            });
+
+            app.MapPost("/games/{gameId}/leave", async (GameManager gameManager, GameNotifier notifier, Guid gameId, [FromBody]Guid playerId) =>
+            {
+                var result = gameManager.LeaveGame(gameId, playerId);
+
+                if (!result.IsSuccess)
+                {
+                    // Notify all clients in this game's group that a new player has joined
+                    return Results.BadRequest(result.Error);
+                }
+                await notifier.GamePlayerUpdate(gameId);
                 return Results.Ok(result);
 
             });

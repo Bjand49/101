@@ -4,7 +4,7 @@ import type { Player } from '../models/Player';
 
 interface SignalRHandlers {
     onGameCreated?: (gameId: string) => Promise<void>;
-    onUserJoinedGroup?: (players: Player[], gameId: string) => Promise<void>;
+    onGamePlayerUpdate?: (players: Player[], gameId: string) => Promise<void>;
 }
 
 export const useSignalRConnection = (handlers: SignalRHandlers) => {
@@ -15,8 +15,8 @@ export const useSignalRConnection = (handlers: SignalRHandlers) => {
         if (handlers.onGameCreated) {
             on('GameCreated', handlers.onGameCreated);
         }
-        if (handlers.onUserJoinedGroup) {
-            on('UserJoinedGroup', handlers.onUserJoinedGroup);
+        if (handlers.onGamePlayerUpdate) {
+            on('GamePlayerUpdate', handlers.onGamePlayerUpdate);
         }
 
         // Cleanup: unregister handlers on unmount
@@ -24,8 +24,8 @@ export const useSignalRConnection = (handlers: SignalRHandlers) => {
             if (handlers.onGameCreated) {
                 off('GameCreated', handlers.onGameCreated);
             }
-            if (handlers.onUserJoinedGroup) {
-                off('UserJoinedGroup', handlers.onUserJoinedGroup);
+            if (handlers.onGamePlayerUpdate) {
+                off('GamePlayerUpdate', handlers.onGamePlayerUpdate);
             }
         };
     }, [handlers]);

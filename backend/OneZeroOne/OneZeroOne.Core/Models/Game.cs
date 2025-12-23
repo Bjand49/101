@@ -95,6 +95,18 @@ namespace OneZeroOne.Core.Models
             Players.Add(player);
             return Result<Player>.Success(player);
         }
+
+        public Result<Player> RemovePlayer(Guid playerId)
+        {
+            var player = Players.Find(p => p.Id == playerId);
+            if (player == null)
+            {
+                return Result<Player>.Failure("Player not found");
+            }
+            Players.Remove(player);
+            return Result<Player>.Success(player);
+        }
+
         public Result<List<Card>> GetPlayerHand(Guid playerId)
         {
             var player = Players.Find(p => p.Id == playerId);

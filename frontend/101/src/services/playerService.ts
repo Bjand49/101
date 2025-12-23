@@ -6,7 +6,7 @@ const PLAYER_KEY = 'player';
 let player: Player | null = null;
 
 
-export const getPlayerId = async (): Promise<Player> => {
+export const getPlayerId = (): Player => {
     if (player) return player;
 
     // Try to retrieve from localStorage
@@ -25,7 +25,7 @@ export const getPlayerId = async (): Promise<Player> => {
 };
 
 export const setPlayerName = async (name: string): Promise<void> => {
-    player ??= await getPlayerId();
+    player ??= getPlayerId();
     player.name = name;
     setPlayer(player);
 }

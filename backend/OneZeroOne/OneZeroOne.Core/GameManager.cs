@@ -74,6 +74,16 @@ namespace OneZeroOne.Core
             return game.AddPlayer(player);
         }
 
+        public Result<Player> LeaveGame(Guid gameId, Guid playerId)
+        {
+            var game = GetGame(gameId);
+            if (game == null)
+            {
+                return Result<Player>.Failure("Game not found");
+            }
+            return game.RemovePlayer(playerId);
+        }
+
         public Result<Guid> StartGame (Guid gameId)
         {
             var game = GetGame(gameId);
