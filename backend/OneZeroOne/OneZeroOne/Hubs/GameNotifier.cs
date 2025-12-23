@@ -16,8 +16,7 @@ namespace OneZeroOne.Web.Hubs
         public async Task SendGameStartedMessage(Guid id)
         {
             var name = GET_SPECIFIC_GAME_UPDATES_GROUP + id;
-            await _hub.Clients.All.SendAsync("YourGameStarted");
-            await _hub.Clients.All.SendAsync("GameStarted", id);
+            await _hub.Clients.All.SendAsync("GameStart", id);
         }
 
         public async Task SendGameCreatedMessage(Guid id)

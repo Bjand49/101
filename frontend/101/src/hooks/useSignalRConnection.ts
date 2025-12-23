@@ -5,6 +5,7 @@ import type { Player } from '../models/Player';
 interface SignalRHandlers {
     onGameCreated?: (gameId: string) => Promise<void>;
     onGamePlayerUpdate?: (players: Player[], gameId: string) => Promise<void>;
+    onGameStart?: (gameId: string) => Promise<void>;
 }
 
 export const useSignalRConnection = (handlers: SignalRHandlers) => {
@@ -18,6 +19,9 @@ export const useSignalRConnection = (handlers: SignalRHandlers) => {
         if (handlers.onGamePlayerUpdate) {
             on('GamePlayerUpdate', handlers.onGamePlayerUpdate);
         }
+        if (handlers.onGameStart) {
+            on('GameStart', handlers.onGameStart);
+        }
 
         // Cleanup: unregister handlers on unmount
         return () => {
@@ -26,6 +30,9 @@ export const useSignalRConnection = (handlers: SignalRHandlers) => {
             }
             if (handlers.onGamePlayerUpdate) {
                 off('GamePlayerUpdate', handlers.onGamePlayerUpdate);
+            }
+            if (handlers.onGameStart) {
+                off('GameStart', handlers.onGameStart);
             }
         };
     }, [handlers]);

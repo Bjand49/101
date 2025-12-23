@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Game } from '../models/Game';
-import { createGame, getGames, getGame, joinGame, leaveGame } from '../hooks/useGame';
+import { startGame, createGame, getGames, getGame, joinGame, leaveGame } from '../hooks/useGame';
 import { useSignalRConnection } from '../hooks/useSignalRConnection';
 import type { Player } from '../models/Player';
 import { getPlayerId, setPlayerName } from '../services/playerService';
@@ -22,7 +22,17 @@ export default function MainPage() {
         },
         onGamePlayerUpdate: async (players: Player[], gameId: string) => {
             setGames(prev => prev.map(g => g.id === gameId ? { ...g, players: players } : g));
+        },
+        onGameStart: async (gameId: string) => {
+            const game = games.find(g => g.id === gameId);
+            if (!game) return;
+            if (game.players.some(p => p.id === player.id)) {
+                console.log(`Player ${player.id} is starting game ${gameId}`);
+                // Navigate to game page
+                globalThis.location.href = `/game/${gameId}`;
+            }
         }
+
     });
 
     useEffect(() => {
@@ -58,6 +68,9 @@ export default function MainPage() {
             return;
         }
         setGames([...games, game!]);
+    };
+    const attemptStartGame = async (gameid: string) => {
+        startGame(gameid);
     };
 
     const attemptJoinGame = (gameid: string) => {
@@ -125,6 +138,7 @@ export default function MainPage() {
                         canJoinGame={canJoinGame}
                         onJoin={attemptJoinGame}
                         onLeave={attemptLeaveGame}
+                        onStart={attemptStartGame}
                     />
                 </div>
             ))}
