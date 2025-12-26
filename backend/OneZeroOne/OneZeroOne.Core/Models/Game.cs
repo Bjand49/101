@@ -83,7 +83,8 @@ namespace OneZeroOne.Core.Models
             {
                 return Result<Card>.Failure("Player does not have that card");
             }
-            return Result<Card>.Success(card);
+            var result = EndTurn(card);
+            return result;
         }
 
         public Result<Player> AddPlayer(Player player)
@@ -153,7 +154,17 @@ namespace OneZeroOne.Core.Models
             Cards.RemoveAt(0);
             return Result<Card>.Success(card);
         }
-
+        public Result<Card> EndTurn(Card card)
+        {
+            var currentPlayerIndex = Players.FindIndex(p => p.Id == ActivePlayerId);
+            if (currentPlayerIndex == -1)
+            {
+                return Result<Card>.Failure("Active player not found");
+            }
+            var nextPlayerIndex = (currentPlayerIndex + 1) % Players.Count;
+            ActivePlayerId = Players[nextPlayerIndex].Id;
+            return Result<Card>.Success(card);
+        }
         private Result<Card> DrawCardFromPlayerDiscardPile(Guid player, Guid discardPilePlayer)
         {
             var playerIndex = Players.Select((p, index) => new { p, Index = index });
@@ -183,6 +194,7 @@ namespace OneZeroOne.Core.Models
 
 
         }
+        
 
     }
 }

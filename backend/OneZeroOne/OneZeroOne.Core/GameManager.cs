@@ -8,14 +8,14 @@ namespace OneZeroOne.Core
 {
     public class GameManager
     {
-        private readonly Dictionary<Guid,Game> _games = new Dictionary<Guid,Game>();
+        private readonly Dictionary<Guid, Game> _games = new Dictionary<Guid, Game>();
         public Guid CreateGame()
         {
             var game = new Game();
             _games.Add(game.Id, game);
             return game.Id;
         }
-        
+
         public Game? GetGame(Guid id)
         {
             if (_games.ContainsKey(id))
@@ -25,14 +25,15 @@ namespace OneZeroOne.Core
             return null;
         }
 
-        public IEnumerable<Game> GetGames() {
+        public IEnumerable<Game> GetGames()
+        {
             return _games.Values;
         }
         public IEnumerable<Guid> GetGameIds()
         {
-            return _games.Values.Select(x=> x.Id);
+            return _games.Values.Select(x => x.Id);
         }
-        public Result<Card> DrawCard (Guid gameId, Guid playerId, Guid? discardPilePlayer = null)
+        public Result<Card> DrawCard(Guid gameId, Guid playerId, Guid? discardPilePlayer = null)
         {
             var game = GetGame(gameId);
             if (game == null)
@@ -67,7 +68,7 @@ namespace OneZeroOne.Core
             {
                 return Result<Player>.Failure("Game not found");
             }
-            else if(game.Players.Any(x=> x.Id == player.Id))
+            else if (game.Players.Any(x => x.Id == player.Id))
             {
                 return Result<Player>.Failure("Player already in game");
             }
@@ -84,12 +85,16 @@ namespace OneZeroOne.Core
             return game.RemovePlayer(playerId);
         }
 
-        public Result<Guid> StartGame (Guid gameId)
+        public Result<Guid> StartGame(Guid gameId)
         {
             var game = GetGame(gameId);
             if (game == null)
             {
                 return Result<Guid>.Failure("Game not found");
+            }
+            else if (game.ActivePlayerId != Guid.Empty)
+            {
+                return Result<Guid>.Failure("Game already started");
             }
             return game.StartGame();
         }

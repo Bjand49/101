@@ -8,5 +8,7 @@ namespace OneZeroOne.Core.Models
     {
         public static Result<T> Success(T value) => new Result<T>(true, value, null);
         public static Result<T> Failure(string error) => new Result<T>(false, default, error);
+
+
     }
 }

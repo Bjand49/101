@@ -216,5 +216,25 @@ namespace OneZeroOne.Tests
             Assert.False(secondJoinResult.IsSuccess);
         }
 
+        [Fact]
+        public void StartGame_WithAlreadyStartedGame_ReturnsFailure()
+        {
+            // Arrange
+            var gameManager = new GameManager();
+            var gameId = gameManager.CreateGame();
+            var player1 = Generators.GeneratePlayer(1);
+            var player2 = Generators.GeneratePlayer(2);
+            gameManager.JoinGame(gameId, player1);
+            gameManager.JoinGame(gameId, player2);
+            var startResult = gameManager.StartGame(gameId);
+
+            // Act
+            var secondStartResult = gameManager.StartGame(gameId);
+
+            // Assert
+            Assert.True(startResult.IsSuccess);
+            Assert.False(secondStartResult.IsSuccess);
+        }
+
     }
 }
