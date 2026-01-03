@@ -4,7 +4,7 @@ import { startGame, createGame, getGames, getGame, joinGame, leaveGame } from '.
 import { useSignalRConnection } from '../hooks/useSignalRConnection';
 import type { Player } from '../models/Player';
 import { getPlayerId, setPlayerName } from '../services/playerService';
-import GameJoinButton from '../components/GameJoinButton';
+import GameJoinButton from '../components/gameJoinButton';
 
 
 export default function MainPage() {
@@ -28,8 +28,8 @@ export default function MainPage() {
             if (!game) return;
             if (game.players.some(p => p.id === player.id)) {
                 console.log(`Player ${player.id} is starting game ${gameId}`);
-                // Navigate to game page
-                globalThis.location.href = `/game/${gameId}`;
+                // Navigate to game page with query parameter
+                globalThis.location.href = `/game?gameId=${encodeURIComponent(gameId)}`;
             }
         }
 

@@ -6,5 +6,5 @@ export interface Game {
     players: Player[];
     cards: Card[];
     activePlayerId: string;
-    activePlayers: number = players.length;
+    activePlayers: number;
 }

@@ -1,4 +1,4 @@
 export interface Card{
-    number: number;
-    suit: string;
+    number?: number | null;
+    suit?: string | null;
 }

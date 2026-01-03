@@ -1,7 +1,12 @@
-import axios, { AxiosError, type AxiosInstance } from 'axios';
+import axios, { AxiosError, type AxiosInstance, type AxiosResponse } from 'axios';
+import { loadingService } from './loadingService';
 export interface Response<T> {
   data: T | undefined;
   error: AxiosError | null;
+}
+
+interface RequestOptions {
+  showSpinner?: boolean;
 }
 
 class ApiClient {
@@ -33,53 +38,77 @@ class ApiClient {
     return headers;
   }
 
+  private async sendRequest<TReturn>(
+    request: () => Promise<AxiosResponse<TReturn>>,
+    options?: RequestOptions,
+  ): Promise<Response<TReturn>> {
+    const showSpinner = options?.showSpinner ?? true;
 
+    if (showSpinner) {
+      loadingService.startRequest();
+    }
 
-  async get<T>(url: string): Promise<Response<T>> {
     try {
-      const response = await this.getClient().get<T>(`${url}`, {
-        headers: this.getHeaders()
-      });
+      const response = await request();
       return { data: response.data, error: null };
     } catch (error: any) {
-      return { data: undefined, error: error.message };
+      const axiosError = error as AxiosError;
+      console.error('Error making API request:', axiosError);
+      return { data: undefined, error: axiosError };
+    } finally {
+      if (showSpinner) {
+        loadingService.endRequest();
+      }
     }
   }
 
-  async post<TBody, TReturn>(url: string, body: TBody): Promise<Response<TReturn>> {
-    try {
-      const response = await this.getClient().post<TReturn>(`${url}`, body, {
-        headers: this.getHeaders(),
-      });
-      return { data: response.data, error: null };
-    } catch (error: any) {
-      console.error("Error making POST request:", error);
-      return { data: undefined, error: error };
-    }
+  async get<T>(url: string, options?: RequestOptions): Promise<Response<T>> {
+    return this.sendRequest<T>(
+      () =>
+        this.getClient().get<T>(`${url}`, {
+          headers: this.getHeaders(),
+        }),
+      options,
+    );
   }
 
+  async post<TBody, TReturn>(
+    url: string,
+    body: TBody,
+    options?: RequestOptions,
+  ): Promise<Response<TReturn>> {
+    return this.sendRequest<TReturn>(
+      () =>
+        this.getClient().post<TReturn>(`${url}`, body, {
+          headers: this.getHeaders(),
+        }),
+      options,
+    );
+  }
 
   // put method
-  async put<TBody, TReturn>(url: string, body: TBody): Promise<Response<TReturn>> {
-    try {
-      const response = await this.getClient().put<TReturn>(`${url}`, body, {
-        headers: this.getHeaders()
-      });
-      return { data: response.data, error: null };
-    } catch (error: any) {
-      return { data: undefined, error: error.message };
-    }
+  async put<TBody, TReturn>(
+    url: string,
+    body: TBody,
+    options?: RequestOptions,
+  ): Promise<Response<TReturn>> {
+    return this.sendRequest<TReturn>(
+      () =>
+        this.getClient().put<TReturn>(`${url}`, body, {
+          headers: this.getHeaders(),
+        }),
+      options,
+    );
   }
 
-  async delete<T>(url: string): Promise<Response<T>> {
-    try {
-      const response = await this.getClient().delete(`${url}`, {
-        headers: this.getHeaders()
-      });
-      return { data: response.data, error: null };
-    } catch (error: any) {
-      return { data: undefined, error: error.message };
-    }
+  async delete<T>(url: string, options?: RequestOptions): Promise<Response<T>> {
+    return this.sendRequest<T>(
+      () =>
+        this.getClient().delete<T>(`${url}`, {
+          headers: this.getHeaders(),
+        }),
+      options,
+    );
   }
 }
 
