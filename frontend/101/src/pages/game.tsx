@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Game } from '../models/Game';
-import { getGame } from '../hooks/useGame';
+import { getGame } from '../hooks/useLobby';
 
 export default function GamePage() {
     const searchParams = new URLSearchParams(globalThis.location.search);

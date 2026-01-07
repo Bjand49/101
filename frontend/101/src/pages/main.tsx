@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Game } from '../models/Game';
-import { startGame, createGame, getGames, getGame, joinGame, leaveGame } from '../hooks/useGame';
+import { startGame, createGame, getGames, getGame, joinGame, leaveGame } from '../hooks/useLobby';
 import { useSignalRConnection } from '../hooks/useSignalRConnection';
 import type { Player } from '../models/Player';
 import { getPlayerId, setPlayerName } from '../services/playerService';

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Card } from '../../models/Card';
+import type { Response } from "../../services/apiClient";
 import { CardSlot } from './CardSlot';
 import {
     DndContext,
@@ -11,14 +12,18 @@ import DroppableDivider from './DroppableDivider';
 import { Button, HStack } from "@chakra-ui/react"
 import { toaster } from '../ui/toaster';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { postCard, drawCard, drawDiscardedCard } from '../../hooks/useGame';
 
 interface PlayerHandProps {
     cards: Card[];
     playerId: string;
+    gameId: string;
 }
 
-export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId }) => {
-    const [animationParent] = useAutoAnimate({duration: 80, easing: 'ease-in-out' });
+export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId }) => {
+    const [animationParent] = useAutoAnimate({ duration: 80, easing: 'ease-in-out' });
+    const [cardsInHandCount, setCardsInHandCount] = useState<number>(0);
+
     const [slots, setSlots] = useState<(Card | null)[]>(() => {
         const arr: (Card | null)[] = new Array(20).fill(null);
         const limit = 15;
@@ -115,54 +120,50 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId }) => {
             return next;
         });
     };
-
-    const cardElements = [];
-    for (let i = 0; i < 10; i++) {
-        const card = slots[i];
-        cardElements.push(
-            <DroppableDivider key={`divider-${i}`} id={`D1-${i}`} />
-            ,
-            <CardSlot
-                key={card ? `card-${card.suit}-${card.number}-${i}` : `empty-slot-${i}`}
-                index={i}
-                card={card}
-            />
-        );
-    }
-    const [cardsInHandCount, setCardsInHandCount] = useState<number>(0);
     useEffect(() => {
         const deckCards = slots.reduce((acc, card) => card ? acc + 1 : acc, 0);
         const cardOutsideOfHand = cardToPlay ? 1 : 0;
         setCardsInHandCount(deckCards + cardOutsideOfHand);
     }, [slots, cardToPlay]);
-    cardElements.push(
-        <DroppableDivider key={`divider-${20}`} id={`D1-${10}`} />);
 
-    for (let i = 10; i < 20; i++) {
-        const card = slots[i];
-        cardElements.push(
-            <DroppableDivider key={`divider-${i}`} id={`D2-${i}`} />
-            ,
-            <CardSlot
-                key={card ? `card-${card.suit}-${card.number}-${i}` : `empty-slot-${i}`}
-                index={i}
-                card={card}
-            />
+    const createCardElements = (startIndex: number, endIndex: number, dividerPrefix: string) => {
+        const elements = [];
+        for (let i = startIndex; i < endIndex; i++) {
+            const card = slots[i];
+            elements.push(
+                <DroppableDivider key={`divider-${i}`} id={`${dividerPrefix}-${i}`} />,
+                <CardSlot
+                    key={card ? `card-${card.suit}-${card.number}-${i}` : `empty-slot-${i}`}
+                    index={i}
+                    card={card}
+                />
+            );
+        }
+        elements.push(
+            <DroppableDivider key={`divider-${endIndex}`} id={`${dividerPrefix}-${endIndex}`} />
         );
-    }
-    cardElements.push(
-        <DroppableDivider key={`divider-${20}`} id={`D2-${20}`} />);
+        return elements;
+    };
 
+    const topRow = createCardElements(0, 10, 'D1');
+    const bottomRow = createCardElements(10, 20, 'D2');
     const collisionDetection: CollisionDetection = (args) => {
         // Prefer the slot directly under the pointer
         const pointerCollisions = pointerWithin(args);
         return pointerCollisions;
     };
-    const topRow = cardElements.slice(0, 21);
-    const bottomRow = cardElements.slice(21, 42);
-    const playCard = () => {
+    const playCard = async () => {
         if (cardToPlay) {
             console.log("Playing card:", cardToPlay);
+            const response = await postCard(gameId, playerId, cardToPlay);
+            if (response.error || !response.data) {
+                toaster.create({
+                    description: "Error playing card. Please try again.",
+                    type: "error",
+                });
+                return;
+            }
+
             setCardToPlay(null);
         }
     };
@@ -200,16 +201,23 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId }) => {
         console.log("Declared hand with groups:", groups);
         console.log(playerId);
     };
-    const drawCard = (drawFromDeck: boolean) => {
+    const fetchCard = async (drawFromDeck: boolean) => {
         if (cardToPlay && cardsInHandCount === 14) {
-            let drawnCard: Card | undefined;
+            let drawnCard: Response<Card>;
             if (drawFromDeck) {
-                drawnCard = { number: 1, suit: "diamond" } as Card; //draw from deck hook
+                drawnCard = await drawCard(gameId, playerId)
             }
             else {
-                //draw from discard pile hook
+                drawnCard = await drawDiscardedCard(gameId, playerId, playerId);
             }
-            return drawnCard;
+            if (drawnCard.error || !drawnCard.data) {
+                toaster.create({
+                    description: "Error drawing card. Please try again.",
+                    type: "error",
+                });
+                return;
+            }
+            setCardToPlay(drawnCard.data);
         }
     };
 
@@ -221,8 +229,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId }) => {
             <HStack mb={4}>
 
                 <CardSlot index={-1} card={cardToPlay} />
-                <Button disabled={cardsInHandCount === 15} onClick={() => drawCard(false)}>Draw from discarded pile</Button>
-                <Button disabled={cardsInHandCount === 15} onClick={() => drawCard(true)}>Draw from pile</Button>
+                <Button disabled={cardsInHandCount === 15} onClick={() => fetchCard(false)}>Draw from discarded pile</Button>
+                <Button disabled={cardsInHandCount === 15} onClick={() => fetchCard(true)}>Draw from pile</Button>
                 <Button disabled={cardToPlay === null || cardsInHandCount === 14} onClick={playCard}>Play Card</Button>
                 <Button disabled={cardsInHandCount === 14} onClick={declareHand}>Declare hand</Button>
             </HStack>

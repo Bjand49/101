@@ -66,6 +66,27 @@ namespace OneZeroOne.Core.Models
             return cardresult;
 
         }
+
+        public Result<List<List<Card>>> DeclareHand(Guid playerId, List<List<Card>> cards)
+        {
+            var cardsPlayed = cards.SelectMany(c => c).ToList();
+            var player = Players.Find(p => p.Id == playerId);
+            if (player == null)
+            {
+                return Result<List<List<Card>>>.Failure("Player not found");
+            }
+            var tempCards = player.Hand.ToList();
+            foreach (var card in cardsPlayed)
+            {
+                var isInHand = tempCards.Remove(card);
+                if (!isInHand)
+                {
+                    return Result<List<List<Card>>>.Failure("Player delcared a hand with cards not i their hand");
+                }
+            }
+            return Result<List<List<Card>>>.Success(cards);
+        }
+
         public Result<Card> PlayCard(Guid playerId, Card card)
         {
             var player = Players.Find(p => p.Id == playerId);

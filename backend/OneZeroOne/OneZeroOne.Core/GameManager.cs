@@ -61,6 +61,17 @@ namespace OneZeroOne.Core
             return game.PlayCard(playerId, card);
         }
 
+        public Result<List<List<Card>>> DeclareHand(Guid gameId, Guid playerId, List<List<Card>> cards)
+        {
+            var game = GetGame(gameId);
+            if (game == null)
+            {
+                return Result<List<List<Card>>>.Failure("Game not found");
+            }
+            return game.DeclareHand(playerId, cards);
+        }
+
+
         public Result<Player> JoinGame(Guid gameId, Player player)
         {
             var game = GetGame(gameId);

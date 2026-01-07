@@ -17,10 +17,19 @@ namespace OneZeroOne.Web.Controllers
             {
                 return Results.Ok(gameManager.PlayCard(gameId, playerId, card));
             });
-            app.MapPost("/games/{gameId}/{playerId}/hand/draw", (Guid gameId, Guid playerId, GameManager gameManager, Guid? discardPilePlayer = null) =>
+            app.MapPost("/games/{gameId}/{playerId}/hand/draw", (Guid gameId, Guid playerId, GameManager gameManager) =>
             {
                 return Results.Ok(gameManager.DrawCard(gameId, playerId));
             });
+            app.MapPost("/games/{gameId}/{playerId}/hand/drawdiscard", (Guid gameId, Guid playerId, Guid discardPilePlayer, GameManager gameManager) =>
+            {
+                return Results.Ok(gameManager.DrawCard(gameId, playerId, discardPilePlayer));
+            });
+            app.MapPost("/games/{gameId}/{playerId}/hand/declare", (Guid gameId, Guid playerId, List<List<Card>> cards, GameManager gameManager) =>
+            {
+                return Results.Ok(gameManager.DeclareHand(gameId, playerId, cards));
+            });
+
         }
     }
 }
