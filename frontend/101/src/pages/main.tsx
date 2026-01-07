@@ -5,12 +5,15 @@ import { useSignalRConnection } from '../hooks/useSignalRConnection';
 import type { Player } from '../models/Player';
 import { getPlayerId, setPlayerName } from '../services/playerService';
 import GameJoinButton from '../components/gameJoinButton';
+import { useColorMode } from '../components/ui/color-mode';
 
 
 export default function MainPage() {
     const [games, setGames] = useState<Game[]>([]);
     const [player, setPlayer] = useState<Player>({} as Player);
     const [canJoinGame, setCanJoinGame] = useState<boolean>(false);
+    const { toggleColorMode, colorMode } = useColorMode();
+
     useSignalRConnection({
         onGameCreated: async (gameId: string) => {
             const res = await getGame(gameId);
@@ -54,6 +57,10 @@ export default function MainPage() {
             }
         };
         init();
+        if (colorMode === "dark") {
+            toggleColorMode();
+        }
+
     }, []);
 
     const newGame = async () => {

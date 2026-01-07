@@ -10,7 +10,6 @@ export default function DroppableDivider({ id }: Readonly<DroppableDividerProps>
         id: id,
     });
 
-
     const borderColor = '#4caf50';
     const backgroundColor = '#e8f5e9';
 
@@ -21,7 +20,6 @@ export default function DroppableDivider({ id }: Readonly<DroppableDividerProps>
         borderRaduis: '8px',
         width: '30px',
         transition: 'background-color 0.15s, border-color 0.15s, box-shadow 0.15s, border-width 0.15s',
-
     };
     return (
         <div ref={setNodeRef} style={style}>

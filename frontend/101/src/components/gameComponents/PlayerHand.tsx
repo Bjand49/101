@@ -1,30 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import type { Card } from '../../models/Card';
-import type { Response } from "../../services/apiClient";
 import { CardSlot } from './CardSlot';
 import {
     DndContext,
     type DragEndEvent,
     pointerWithin,
-    type CollisionDetection,
 } from '@dnd-kit/core';
 import DroppableDivider from './DroppableDivider';
 import { Button, HStack } from "@chakra-ui/react"
-import { toaster } from '../ui/toaster';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { playCard, drawCard, drawDiscardedCard, declareHand } from '../../hooks/useGame';
 
 interface PlayerHandProps {
     cards: Card[];
-    playerId: string;
-    gameId: string;
     isMyTurn?: boolean;
+    playedCard: Card | null;
+    callDrawCard: (drawFromDeck: boolean, cardToPlay: Card | null, cardsInHandCount: number) => Promise<void>;
+    callPlayCard: (card: Card | null) => Promise<void>;
+    callDeclareHand: (cards: Card[][]) => Promise<void>;
 }
 
-export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId, isMyTurn }) => {
+export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, isMyTurn, playedCard, callDeclareHand, callDrawCard, callPlayCard }) => {
     const [animationParent] = useAutoAnimate({ duration: 80, easing: 'ease-in-out' });
     const [cardsInHandCount, setCardsInHandCount] = useState<number>(0);
-
+    const [cardToPlay, setCardToPlay] = useState<Card | null>(null);
     const [slots, setSlots] = useState<(Card | null)[]>(() => {
         const arr: (Card | null)[] = new Array(20).fill(null);
         const limit = 15;
@@ -33,12 +31,22 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId,
         }
         return arr;
     });
-    const [cardToPlay, setCardToPlay] = useState<Card | null>(null);
+
+    useEffect(() => {
+        const deckCards = slots.reduce((acc, card) => card ? acc + 1 : acc, 0);
+        const cardOutsideOfHand = cardToPlay ? 1 : 0;
+        setCardsInHandCount(deckCards + cardOutsideOfHand);
+    }, [slots, cardToPlay]);
+
+    useEffect(() => {
+        setCardToPlay(playedCard);
+    }, [playedCard]);
+
 
     const handleDragEnd = (event: DragEndEvent) => {
         const fromId = event.active.data.current?.fromIndex as number | undefined;
         const overId = event.over?.id as string | undefined;
-        console.log(`Drag ended from ${fromId} to ${overId}`);
+
         if (fromId === undefined || overId === undefined) return;
         if (Number.parseInt(overId) === -1 && fromId === -1) return;
 
@@ -52,7 +60,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId,
             });
             return;
         }
-        if (fromId == null || overId == null || fromId.toString() === overId) return;
+
+        if (fromId == undefined || overId == undefined || fromId.toString() === overId) return;
         setSlots(prev => {
             const next = [...prev];
             const movingCard = fromId === -1 ? cardToPlay : next[fromId];
@@ -121,11 +130,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId,
             return next;
         });
     };
-    useEffect(() => {
-        const deckCards = slots.reduce((acc, card) => card ? acc + 1 : acc, 0);
-        const cardOutsideOfHand = cardToPlay ? 1 : 0;
-        setCardsInHandCount(deckCards + cardOutsideOfHand);
-    }, [slots, cardToPlay]);
 
     const createCardElements = (startIndex: number, endIndex: number, dividerPrefix: string) => {
         const elements = [];
@@ -146,35 +150,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId,
         return elements;
     };
 
-    const topRow = createCardElements(0, 10, 'D1');
-    const bottomRow = createCardElements(10, 20, 'D2');
-    const collisionDetection: CollisionDetection = (args) => {
-        // Prefer the slot directly under the pointer
-        const pointerCollisions = pointerWithin(args);
-        return pointerCollisions;
-    };
-    const callPlayCard = async () => {
-        if (cardToPlay) {
-            console.log("Playing card:", cardToPlay);
-            const response = await playCard(gameId, playerId, cardToPlay);
-            if (response.error || !response.data) {
-                toaster.create({
-                    description: "Error playing card. Please try again.",
-                    type: "error",
-                });
-                return;
-            }
-
-            setCardToPlay(null);
-        }
-    };
-
-    const callDeclareHand = async () => {
+    const gatherCards = () => {
         if (slots.reduce((acc, card) => card ? acc + 1 : acc, 0) === 15) {
-            toaster.create({
-                description: "You need to discard a card before declaring your hand.",
-                type: "warning",
-            });
             return;
         }
         // gather cards into groups
@@ -198,53 +175,22 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId,
         getCards(slots.slice(0, 10) as Array<Card>);
         getCards(slots.slice(10, 20) as Array<Card>);
 
+        callDeclareHand(groups);
+    };
 
-        console.log("Declared hand with groups:", groups);
-        const result = await declareHand(gameId, playerId, groups);
-        if (result.error || !result.data) {
-            toaster.create({
-                description: "Error declaring hand. Please try again.",
-                type: "error",
-            });
-            return;
-        }
-        toaster.create({
-            description: "Hand declared successfully!",
-            type: "success",
-        });
-    };
-    const callDrawCard = async (drawFromDeck: boolean) => {
-        if (cardToPlay && cardsInHandCount === 14) {
-            let drawnCard: Response<Card>;
-            if (drawFromDeck) {
-                drawnCard = await drawCard(gameId, playerId)
-            }
-            else {
-                drawnCard = await drawDiscardedCard(gameId, playerId, playerId);
-            }
-            if (drawnCard.error || !drawnCard.data) {
-                toaster.create({
-                    description: "Error drawing card. Please try again.",
-                    type: "error",
-                });
-                return;
-            }
-            setCardToPlay(drawnCard.data);
-        }
-    };
+    const topRow = createCardElements(0, 10, 'D1');
+    const bottomRow = createCardElements(10, 20, 'D2');
 
     return (
         <DndContext
-            collisionDetection={collisionDetection}
-            onDragEnd={handleDragEnd}
-        >
+            collisionDetection={pointerWithin}
+            onDragEnd={handleDragEnd}>
             <HStack mb={4}>
-
                 <CardSlot index={-1} card={cardToPlay} />
-                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(false)}>Draw from discarded pile</Button>
-                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(true)}>Draw from pile</Button>
-                <Button disabled={!isMyTurn || cardToPlay === null || cardsInHandCount === 14} onClick={callPlayCard}>Play Card</Button>
-                <Button disabled={!isMyTurn} onClick={callDeclareHand}>Declare hand</Button>
+                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(false, cardToPlay, cardsInHandCount)}>Draw from discarded pile</Button>
+                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(true, cardToPlay, cardsInHandCount)}>Draw from pile</Button>
+                <Button disabled={!isMyTurn || cardToPlay === null || cardsInHandCount === 14} onClick={() => callPlayCard(cardToPlay)}>Play Card</Button>
+                <Button disabled={!isMyTurn} onClick={gatherCards}>Declare hand</Button>
             </HStack>
             <br />
             <div
@@ -256,8 +202,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId,
                     justifyContent: 'center',
                 }}
             >
-
-
                 {/* Generate top row */}
                 {topRow}
                 {/* Generate bottom row */}
