@@ -36,17 +36,11 @@ export const CardSlot: React.FC<CardSlotProps> = ({ card, index }) => {
 
     const isEmpty = !card;
 
-    const borderColor = isOver
-        ? isEmpty
-            ? '#4caf50' // move into empty
-            : '#ff9800' // insert/replace here
-        : '#aaa';
+    const borderColorWhenOver = isEmpty ? '#4caf50' : '#ff9800';
+    const borderColor = isOver ? borderColorWhenOver : '#aaa';
 
-    const backgroundColor = isOver
-        ? isEmpty
-            ? '#e8f5e9' // light green
-            : '#fff3e0' // light orange
-        : 'transparent';
+    const backgroundColorWhenOver = isEmpty ? '#e8f5e9' : '#fff3e0';
+    const backgroundColor = isOver ? backgroundColorWhenOver : 'transparent';
 
     const borderStyle = isEmpty ? 'dashed' : 'solid';
 
@@ -68,7 +62,7 @@ export const CardSlot: React.FC<CardSlotProps> = ({ card, index }) => {
 
     return (
         <div ref={setNodeRef} style={slotStyle}>
-            {card ? <DraggableCard card={card} index={index}/> : index}
+            {card ? <DraggableCard card={card} index={index}/> : null}
         </div>
     );
 };

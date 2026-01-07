@@ -19,7 +19,10 @@ export const CardDisplay: React.FC<CardProps> = ({ suit, number, isHidden = fals
         color: isHidden ? 'transparent' : 'black',
         fontSize: '24px',
         boxShadow: '2px 2px 6px rgba(0,0,0,0.2)',
-        margin: '5px'
+        margin: '5px',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        msUserSelect: 'none',
     };
     return (
         <div style={cardStyle}>

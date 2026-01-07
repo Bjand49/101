@@ -6,16 +6,19 @@ import MainPage from './pages/main.tsx'
 import GamePage from './pages/game.tsx'
 import TestGamePage from './pages/testgame.tsx'
 import { LoadingOverlay } from './components/LoadingOverlay'
+import { Provider } from './components/ui/provider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <LoadingOverlay />
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/game" element={<GamePage />} />
-        <Route path="/test" element={<TestGamePage />} />
-      </Routes>
-    </BrowserRouter>
+    <Provider>
+      <BrowserRouter>
+        <LoadingOverlay />
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/game" element={<GamePage />} />
+          <Route path="/test" element={<TestGamePage />} />
+        </Routes>
+      </BrowserRouter>
+    </Provider>
   </StrictMode>
 )
