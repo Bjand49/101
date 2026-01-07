@@ -5,10 +5,12 @@ import type { Player } from '../models/Player';
 import { PlayerHand } from '../components/gameComponents/PlayerHand';
 import { useColorMode } from '../components/ui/color-mode';
 import { Toaster } from '../components/ui/toaster';
+import { Button } from '@chakra-ui/react';
 
 export default function TestGamePage() {
 
     const [game, setGame] = useState<Game | null>(null);
+    const [isMyTurn, setisMyTurn] = useState<boolean>(false);
     const { toggleColorMode, colorMode } = useColorMode();
     const setHand = (): Card[] => {
         const suits = ["hearts", "diamonds", "clubs", "spades"];
@@ -40,12 +42,13 @@ export default function TestGamePage() {
     }, []);
     return (
         <div className="test-game-page">
+            <Button onClick={() => setisMyTurn(!isMyTurn)} mb={4}>Toggle turn</Button>
             <Toaster />
             <h1>Test Game Page</h1>
             {game?.players[0]?.hand && (
                 <div>
                     <h2>Player Hand:</h2>
-                    <PlayerHand cards={game?.players[0].hand} playerId={game?.players[0].id} gameId={game?.id} />
+                    <PlayerHand cards={game?.players[0].hand} playerId={game?.players[0].id} gameId={game?.id} isMyTurn={isMyTurn} />
                 </div>
             )}
         </div>

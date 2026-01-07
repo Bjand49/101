@@ -12,15 +12,16 @@ import DroppableDivider from './DroppableDivider';
 import { Button, HStack } from "@chakra-ui/react"
 import { toaster } from '../ui/toaster';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { postCard, drawCard, drawDiscardedCard } from '../../hooks/useGame';
+import { playCard, drawCard, drawDiscardedCard, declareHand } from '../../hooks/useGame';
 
 interface PlayerHandProps {
     cards: Card[];
     playerId: string;
     gameId: string;
+    isMyTurn?: boolean;
 }
 
-export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId }) => {
+export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId, isMyTurn }) => {
     const [animationParent] = useAutoAnimate({ duration: 80, easing: 'ease-in-out' });
     const [cardsInHandCount, setCardsInHandCount] = useState<number>(0);
 
@@ -152,10 +153,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId 
         const pointerCollisions = pointerWithin(args);
         return pointerCollisions;
     };
-    const playCard = async () => {
+    const callPlayCard = async () => {
         if (cardToPlay) {
             console.log("Playing card:", cardToPlay);
-            const response = await postCard(gameId, playerId, cardToPlay);
+            const response = await playCard(gameId, playerId, cardToPlay);
             if (response.error || !response.data) {
                 toaster.create({
                     description: "Error playing card. Please try again.",
@@ -168,7 +169,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId 
         }
     };
 
-    const declareHand = () => {
+    const callDeclareHand = async () => {
         if (slots.reduce((acc, card) => card ? acc + 1 : acc, 0) === 15) {
             toaster.create({
                 description: "You need to discard a card before declaring your hand.",
@@ -199,9 +200,20 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId 
 
 
         console.log("Declared hand with groups:", groups);
-        console.log(playerId);
+        const result = await declareHand(gameId, playerId, groups);
+        if (result.error || !result.data) {
+            toaster.create({
+                description: "Error declaring hand. Please try again.",
+                type: "error",
+            });
+            return;
+        }
+        toaster.create({
+            description: "Hand declared successfully!",
+            type: "success",
+        });
     };
-    const fetchCard = async (drawFromDeck: boolean) => {
+    const callDrawCard = async (drawFromDeck: boolean) => {
         if (cardToPlay && cardsInHandCount === 14) {
             let drawnCard: Response<Card>;
             if (drawFromDeck) {
@@ -229,10 +241,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, playerId, gameId 
             <HStack mb={4}>
 
                 <CardSlot index={-1} card={cardToPlay} />
-                <Button disabled={cardsInHandCount === 15} onClick={() => fetchCard(false)}>Draw from discarded pile</Button>
-                <Button disabled={cardsInHandCount === 15} onClick={() => fetchCard(true)}>Draw from pile</Button>
-                <Button disabled={cardToPlay === null || cardsInHandCount === 14} onClick={playCard}>Play Card</Button>
-                <Button disabled={cardsInHandCount === 14} onClick={declareHand}>Declare hand</Button>
+                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(false)}>Draw from discarded pile</Button>
+                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(true)}>Draw from pile</Button>
+                <Button disabled={!isMyTurn || cardToPlay === null || cardsInHandCount === 14} onClick={callPlayCard}>Play Card</Button>
+                <Button disabled={!isMyTurn} onClick={callDeclareHand}>Declare hand</Button>
             </HStack>
             <br />
             <div
