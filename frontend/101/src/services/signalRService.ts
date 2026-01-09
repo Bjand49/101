@@ -6,8 +6,8 @@ const handlers = new Map<string, Set<(...args: any[]) => void>>();
 
 const createConnection = (): signalR.HubConnection => {
     // Optionally force WebSockets transport and skip negotiate if configured
-    const forceWs = import.meta.env.VITE_FORCE_WS === 'true';
-    const url = import.meta.env.VITE_BASE_URL ? `${import.meta.env.VITE_BASE_URL}/gamehub` : 'http://localhost:5093/gamehub';
+    const forceWs =  'true';
+    const url = 'http://192.168.4.23:5000/gamehub';
     const options: any = {};
     if (forceWs) {
         options.transport = signalR.HttpTransportType.WebSockets;
@@ -34,7 +34,6 @@ export const startConnection = async (): Promise<void> => {
     const conn = getSignalRConnection();
 
     if (conn.state !== signalR.HubConnectionState.Disconnected) {
-        console.log('SignalR start skipped, state=', conn.state);
         return;
     }
 

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using OneZeroOne.Core;
 using OneZeroOne.Core.Models;
-using OneZeroOne.Web.Hubs;
+using OneZeroOne.Web.SignalR;
+using OneZeroOne.Web.Mappers;
 
 namespace OneZeroOne.Web.Controllers
 {
@@ -10,78 +12,117 @@ namespace OneZeroOne.Web.Controllers
         public static void RegisterManagerRoutes(this WebApplication app)
         {
             //Create game
-            app.MapPost("/games", async (GameManager gameManager, GameNotifier notifier) =>
+            app.MapPost("/games", CreateGame);
+
+            app.MapGet("/games/{gameId}", GetGameById);
+
+            app.MapPost("/games/{gameId}/start", StartGame);
+
+            app.MapGet("/games", GetAllGames);
+
+            app.MapPost("/games/{gameId}/join", JoinGame);
+
+            app.MapPost("/games/{gameId}/leave", LeaveGame);
+
+            app.MapPost("/games/clear", ClearGames);
+        }
+
+        private static async Task<IResult> CreateGame(GameManager gameManager, GameNotifier notifier)
+        {
+            var gameId = gameManager.CreateGame();
+            await notifier.SendGameCreatedMessage(gameId);
+            return Results.Ok(gameId);
+        }
+
+        private static IResult GetGameById(Guid gameId, GameManager gameManager)
+        {
+            if (gameId == Guid.Empty)
             {
-                var gameId = gameManager.CreateGame();
-                await notifier.SendGameCreatedMessage(gameId);
-                return Results.Ok(gameId);
-            });
+                return Results.BadRequest("Game ID cannot be empty");
+            }
 
-            app.MapGet("/games/{gameId}", (Guid gameId, GameManager gameManager) =>
+            var game = gameManager.GetGame(gameId);
+            if (game == null)
             {
-                var game = gameManager.GetGame(gameId);
-                if (game == null)
-                {
-                    return Results.NotFound();
-                }
-                return Results.Ok(game);
-            });
+                return Results.NotFound("Game not found");
+            }
+            return Results.Ok(game.ToViewModel());
+        }
 
-            app.MapPost("/games/{gameId}/start", async (Guid gameId, GameManager gameManager, GameNotifier notifier) =>
+        private static async Task<IResult> StartGame(Guid gameId, GameManager gameManager, GameNotifier notifier)
+        {
+            var game = gameManager.StartGame(gameId);
+            if (game == null)
             {
-                var game = gameManager.StartGame(gameId);
-                if (game == null)
-                {
-                    return Results.NotFound();
-                }
-                await notifier.SendGameStartedMessage(gameId);
+                return Results.NotFound();
+            }
+            await notifier.SendGameStartedMessage(gameId);
 
-                return Results.Ok(game);
-            });
+            return Results.Ok(game);
+        }
 
-            app.MapGet("/games", (GameManager gameManager) =>
+        private static IResult GetAllGames(GameManager gameManager)
+        {
+            var games = gameManager.GetGames();
+            return Results.Ok(games.Select(x => x.ToViewModel()));
+        }
+
+        private static async Task<IResult> JoinGame(GameManager gameManager, GameNotifier notifier, GameHub hub, Guid gameId, Player player)
+        {
+            if (gameId == Guid.Empty)
             {
-                var games = gameManager.GetGames();
-                return Results.Ok(games);
-            });
-
-            app.MapPost("/games/{gameId}/join", async (GameManager gameManager, GameNotifier notifier, Guid gameId, Player player) =>
+                return Results.BadRequest("Game ID cannot be empty");
+            }
+            if (player == null)
             {
-                var result = gameManager.JoinGame(gameId, player);
-
-                if (!result.IsSuccess)
-                {
-                    // Notify all clients in this game's group that a new player has joined
-                    return Results.BadRequest(result.Error);
-                }
-                await notifier.GamePlayerUpdate(gameId);
-                return Results.Ok(result);
-
-            });
-
-            app.MapPost("/games/{gameId}/leave", async (GameManager gameManager, GameNotifier notifier, Guid gameId, [FromBody]Guid playerId) =>
+                return Results.BadRequest("Player cannot be null");
+            }
+            if (player.Id == Guid.Empty)
             {
-                var result = gameManager.LeaveGame(gameId, playerId);
+                return Results.BadRequest("Player ID cannot be empty");
+            }
 
-                if (!result.IsSuccess)
-                {
-                    // Notify all clients in this game's group that a new player has joined
-                    return Results.BadRequest(result.Error);
-                }
-                await notifier.GamePlayerUpdate(gameId);
-                return Results.Ok(result);
+            var result = gameManager.JoinGame(gameId, player);
 
-            });
-
-            app.MapPost("/games/clear", async (GameManager gameManager) =>
+            if (!result.IsSuccess)
             {
-                gameManager.Reset();
-                return Results.Ok();
+                return Results.BadRequest(result.Error);
+            }
 
-            });
+            await hub.JoinGameGroup(gameId);
+            await notifier.GamePlayerUpdate(gameId);
 
+            return Results.Ok(result.Value!.ToViewModel());
+        }
 
+        private static async Task<IResult> LeaveGame(GameManager gameManager, GameNotifier notifier, GameHub hub, Guid gameId, [FromBody]Guid playerId)
+        {
+            if (gameId == Guid.Empty)
+            {
+                return Results.BadRequest("Game ID cannot be empty");
+            }
+            if (playerId == Guid.Empty)
+            {
+                return Results.BadRequest("Player ID cannot be empty");
+            }
 
+            var result = gameManager.LeaveGame(gameId, playerId);
+
+            if (!result.IsSuccess)
+            {
+                return Results.BadRequest(result.Error);
+            }
+
+            await hub.LeaveGameGroup(gameId);
+            await notifier.GamePlayerUpdate(gameId);
+
+            return Results.Ok(result.Value!.ToViewModel());
+        }
+
+        private static async Task<IResult> ClearGames(GameManager gameManager)
+        {
+            gameManager.Reset();
+            return Results.Ok();
         }
     }
 }

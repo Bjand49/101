@@ -1,13 +1,10 @@
 import React from 'react';
 import type { Card } from '../../models/Card'; // Adjust path
 
-interface CardProps extends Card {
-    isHidden?: boolean;
-}
 
-export const CardDisplay: React.FC<CardProps> = ({ suit, number, isHidden = false }) => {
+export const CardDisplay: React.FC<Card> = ({ suit, number }) => {
     const cardStyle: React.CSSProperties = {
-        width: '100px', 
+        width: '100px',
         height: '150px',
         border: '1px solid black',
         borderRadius: '8px',
@@ -15,8 +12,8 @@ export const CardDisplay: React.FC<CardProps> = ({ suit, number, isHidden = fals
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: isHidden ? 'gray' : 'white',
-        color: isHidden ? 'transparent' : 'black',
+        backgroundColor: 'white',
+        color: 'black',
         fontSize: '24px',
         boxShadow: '2px 2px 6px rgba(0,0,0,0.2)',
         margin: '5px',
@@ -26,12 +23,8 @@ export const CardDisplay: React.FC<CardProps> = ({ suit, number, isHidden = fals
     };
     return (
         <div style={cardStyle}>
-            {!isHidden && (
-                <>
-                    <div>{number}</div>
-                    <div>{suit}</div>
-                </>
-            )}
+            <div>{number}</div>
+            <div>{suit}</div>
         </div>
     );
 };

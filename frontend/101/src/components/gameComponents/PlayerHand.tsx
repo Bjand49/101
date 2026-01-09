@@ -5,6 +5,11 @@ import {
     DndContext,
     type DragEndEvent,
     pointerWithin,
+    closestCenter,
+    TouchSensor,
+    MouseSensor,
+    useSensor,
+    useSensors,
 } from '@dnd-kit/core';
 import DroppableDivider from './DroppableDivider';
 import { Button, HStack } from "@chakra-ui/react"
@@ -12,17 +17,18 @@ import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 interface PlayerHandProps {
     cards: Card[];
-    isMyTurn?: boolean;
+    isMyTurn: boolean;
     playedCard: Card | null;
-    callDrawCard: (drawFromDeck: boolean, cardToPlay: Card | null, cardsInHandCount: number) => Promise<void>;
+    hasDrawnCardThisTurn: boolean;
+    callDrawCard: (drawFromDeck: boolean, playedCard: Card | null, cardsInHandCount: number) => Promise<void>;
     callPlayCard: (card: Card | null) => Promise<void>;
     callDeclareHand: (cards: Card[][]) => Promise<void>;
+    setplayedCard: (card: Card | null) => void;
 }
 
-export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, isMyTurn, playedCard, callDeclareHand, callDrawCard, callPlayCard }) => {
+export const PlayerHand = ({ cards, isMyTurn, playedCard, hasDrawnCardThisTurn, callDrawCard, callPlayCard, callDeclareHand, setplayedCard }: PlayerHandProps) => {
     const [animationParent] = useAutoAnimate({ duration: 80, easing: 'ease-in-out' });
     const [cardsInHandCount, setCardsInHandCount] = useState<number>(0);
-    const [cardToPlay, setCardToPlay] = useState<Card | null>(null);
     const [slots, setSlots] = useState<(Card | null)[]>(() => {
         const arr: (Card | null)[] = new Array(20).fill(null);
         const limit = 15;
@@ -32,15 +38,30 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, isMyTurn, playedC
         return arr;
     });
 
-    useEffect(() => {
-        const deckCards = slots.reduce((acc, card) => card ? acc + 1 : acc, 0);
-        const cardOutsideOfHand = cardToPlay ? 1 : 0;
-        setCardsInHandCount(deckCards + cardOutsideOfHand);
-    }, [slots, cardToPlay]);
+    // Configure sensors for better touch/mobile support
+    const sensors = useSensors(
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 100,
+                tolerance: 8,
+            },
+        }),
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    );
 
     useEffect(() => {
-        setCardToPlay(playedCard);
-    }, [playedCard]);
+        const deckCards = slots.reduce((acc, card) => card ? acc + 1 : acc, 0);
+        const cardOutsideOfHand = playedCard ? 1 : 0;
+        setCardsInHandCount(deckCards + cardOutsideOfHand);
+        console.log("playedCard changed123132:", playedCard);
+
+    }, [slots, playedCard]);
+
+
 
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -52,10 +73,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, isMyTurn, playedC
 
         if (Number.parseInt(overId) === -1) {
             const card = slots[fromId] as Card;
-            setCardToPlay(card);
+            setplayedCard(card);
             setSlots(prev => {
                 const next = [...prev];
-                next[fromId] = cardToPlay;
+                next[fromId] = playedCard;
                 return next;
             });
             return;
@@ -64,7 +85,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, isMyTurn, playedC
         if (fromId == undefined || overId == undefined || fromId.toString() === overId) return;
         setSlots(prev => {
             const next = [...prev];
-            const movingCard = fromId === -1 ? cardToPlay : next[fromId];
+            const movingCard = fromId === -1 ? playedCard : next[fromId];
             next[fromId] = null;
             if (!movingCard) return prev;
 
@@ -125,7 +146,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, isMyTurn, playedC
                 next[overIdNum] = movingCard;
             }
             if (fromId === -1) {
-                setCardToPlay(null);
+                setplayedCard(null);
             }
             return next;
         });
@@ -180,27 +201,37 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ cards, isMyTurn, playedC
 
     const topRow = createCardElements(0, 10, 'D1');
     const bottomRow = createCardElements(10, 20, 'D2');
+    const playerStyle = {
+        border: isMyTurn ? '5px solid green' : '5px solid black',
+        borderRadius: '10px',
+        padding: '10px',
+        margin: '10px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(21, auto)',
+        gap: '0px',
+        justifyContent: 'center',
 
+    };
     return (
+
         <DndContext
-            collisionDetection={pointerWithin}
+            sensors={sensors}
+            autoScroll={false}
+            collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}>
             <HStack mb={4}>
-                <CardSlot index={-1} card={cardToPlay} />
-                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(false, cardToPlay, cardsInHandCount)}>Draw from discarded pile</Button>
-                <Button disabled={!isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(true, cardToPlay, cardsInHandCount)}>Draw from pile</Button>
-                <Button disabled={!isMyTurn || cardToPlay === null || cardsInHandCount === 14} onClick={() => callPlayCard(cardToPlay)}>Play Card</Button>
-                <Button disabled={!isMyTurn} onClick={gatherCards}>Declare hand</Button>
+                <p>Cards in hand: {cardsInHandCount}</p>
+                <p>Is my turn: {isMyTurn ? 'true' : 'false'}</p>
+                <Button disabled={hasDrawnCardThisTurn || !isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(false, playedCard, cardsInHandCount)}>Draw from discarded pile</Button>
+                <Button disabled={hasDrawnCardThisTurn || !isMyTurn || cardsInHandCount === 15} onClick={() => callDrawCard(true, playedCard, cardsInHandCount)}>Draw from pile</Button>
+                <Button disabled={!hasDrawnCardThisTurn || !isMyTurn || cardsInHandCount !== 15} onClick={() => callPlayCard(playedCard)}>Play Card</Button>
+                <Button disabled={!hasDrawnCardThisTurn || !isMyTurn} onClick={gatherCards}>Declare hand</Button>
+                <CardSlot index={-1} card={playedCard} />
             </HStack>
             <br />
             <div
                 ref={animationParent}
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(21, auto)',
-                    gap: '0px',
-                    justifyContent: 'center',
-                }}
+                style={playerStyle}
             >
                 {/* Generate top row */}
                 {topRow}

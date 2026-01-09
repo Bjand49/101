@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getPlayerId as getPlayer } from '../services/playerService';
+import { getPlayer as getPlayer } from '../services/playerService';
 import type { Player } from '../models/Player';
 
 /**

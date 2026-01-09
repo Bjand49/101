@@ -13,7 +13,7 @@ export default function TestGamePage() {
     const [game, setGame] = useState<Game | null>(null);
     const [isMyTurn, setisMyTurn] = useState<boolean>(false);
     const [cardToPlay, setCardToPlay] = useState<Card | null>(null);
-
+    const [hand, setHandState] = useState<Card[]>([]);
     const setHand = (): Card[] => {
         const suits = ["hearts", "diamonds", "clubs", "spades"];
         const result: Card[] = [];
@@ -34,7 +34,8 @@ export default function TestGamePage() {
     }
     useEffect(() => {
         const cards = setHand();
-        const player: Player = { id: "test-player", name: "Test Player", hand: cards, discardPile: [] };
+        setHandState(cards);
+        const player: Player = { id: "test-player", name: "Test Player" };
         setGame({ id: "test-game", players: [player], cards: cards, activePlayerId: player.id, activePlayers: 1 });
     }, []);
 
@@ -99,10 +100,10 @@ export default function TestGamePage() {
             <Button onClick={() => setisMyTurn(!isMyTurn)} mb={4}>Toggle turn</Button>
             <Toaster />
             <h1>Test Game Page</h1>
-            {game?.players[0]?.hand && (
+            {hand && (
                 <div>
                     <h2>Player Hand:</h2>
-                    <PlayerHand cards={game?.players[0].hand} isMyTurn={isMyTurn} callDeclareHand={callDeclareHand} callDrawCard={callDrawCard} callPlayCard={callPlayCard} playedCard={cardToPlay}/>
+                    <PlayerHand cards={hand} isMyTurn={isMyTurn} callDeclareHand={callDeclareHand} callDrawCard={callDrawCard} callPlayCard={callPlayCard} playedCard={cardToPlay}/>
                 </div>
             )}
         </div>

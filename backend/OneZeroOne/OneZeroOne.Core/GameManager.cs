@@ -3,16 +3,23 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace OneZeroOne.Core
 {
     public class GameManager
     {
         private readonly Dictionary<Guid, Game> _games = new Dictionary<Guid, Game>();
+        private readonly ILogger<GameManager> _logger;
+        public GameManager(ILogger<GameManager> logger)
+        {
+            _logger = logger;
+        }
         public Guid CreateGame()
         {
             var game = new Game();
             _games.Add(game.Id, game);
+            _logger.LogInformation("Created new game with ID: {GameId}", game.Id);
             return game.Id;
         }
 
@@ -20,24 +27,30 @@ namespace OneZeroOne.Core
         {
             if (_games.ContainsKey(id))
             {
+                _logger.LogDebug("Retrieved game with ID: {GameId}", id);
                 return _games[id];
             }
+            _logger.LogWarning("Game with ID: {GameId} not found", id);
             return null;
         }
 
         public IEnumerable<Game> GetGames()
         {
-            return _games.Values;
+            var games = _games.Values.Where(x=> x.ActivePlayerId == Guid.Empty);
+            return games;
         }
         public IEnumerable<Guid> GetGameIds()
         {
-            return _games.Values.Select(x => x.Id);
+            var games = _games.Values.Select(x => x.Id);
+            _logger.LogDebug("Found {GamesAmount} of games", games.Count());
+            return games;
         }
         public Result<Card> DrawCard(Guid gameId, Guid playerId, Guid? discardPilePlayer = null)
         {
             var game = GetGame(gameId);
             if (game == null)
             {
+                _logger.LogWarning("DrawCard failed: Game with ID: {GameId} not found", gameId);
                 return Result<Card>.Failure("Game not found");
             }
             return game.DrawCard(playerId, discardPilePlayer);

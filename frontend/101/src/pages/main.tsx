@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import type { Game } from '../models/Game';
 import { startGame, createGame, getGames, getGame, joinGame, leaveGame } from '../hooks/useLobby';
-import { useSignalRConnection } from '../hooks/useSignalRConnection';
 import type { Player } from '../models/Player';
-import { getPlayerId, setPlayerName } from '../services/playerService';
+import { getPlayer, setPlayerName } from '../services/playerService';
 import GameJoinButton from '../components/gameJoinButton';
 import { useColorMode } from '../components/ui/color-mode';
+import { Input } from '@chakra-ui/react';
+import { useSignalRConnection } from '../hooks/useSignalRConnection';
 
 
 export default function MainPage() {
     const [games, setGames] = useState<Game[]>([]);
-    const [player, setPlayer] = useState<Player>({} as Player);
+    const [player, setPlayer] = useState<Player>(getPlayer());
     const [canJoinGame, setCanJoinGame] = useState<boolean>(false);
     const { toggleColorMode, colorMode } = useColorMode();
 
@@ -27,6 +28,7 @@ export default function MainPage() {
             setGames(prev => prev.map(g => g.id === gameId ? { ...g, players: players } : g));
         },
         onGameStart: async (gameId: string) => {
+            console.log("triggered onGameStart for gameId:", gameId);
             const game = games.find(g => g.id === gameId);
             if (!game) return;
             if (game.players.some(p => p.id === player.id)) {
@@ -34,13 +36,16 @@ export default function MainPage() {
                 // Navigate to game page with query parameter
                 globalThis.location.href = `/game?gameId=${encodeURIComponent(gameId)}`;
             }
+            else {
+                setGames(prev => prev.filter(g => g.id !== gameId));
+            }
         }
 
     });
 
     useEffect(() => {
         const init = async () => {
-            const playertemp = getPlayerId();
+            const playertemp = getPlayer();
             setPlayer(playertemp);
             const data = await getGames();
             if (data.data) {
@@ -96,14 +101,14 @@ export default function MainPage() {
                 <span className="font-semibold">Player ID:</span> {player.id} <br />
                 <span className="font-semibold">Player Name:</span> {player.name || 'Unnamed Player'}
                 <br />
-                <input
+                <Input
                     type="text"
                     value={player.name}
                     onChange={(e) => setPlayer({ ...player, name: e.target.value })}
                 />
                 <button onClick={async () => {
                     await setPlayerName(player.name);
-                    setPlayer({ ...player }); // Update the state to reflect the new name
+                    setPlayer({ ...player });
                 }}>save name</button>
                 {canJoinGame && <p className="text-red-500">true</p>}
                 {!canJoinGame && <p className="text-red-500">false</p>}

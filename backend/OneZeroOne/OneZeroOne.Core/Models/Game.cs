@@ -1,4 +1,5 @@
-﻿using OneZeroOne.Core.Enums;
+﻿using Microsoft.Extensions.Logging;
+using OneZeroOne.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,6 +8,7 @@ namespace OneZeroOne.Core.Models
 {
     public class Game
     {
+        private readonly ILogger<Game> _logger;
         public Game()
         {
             // Create a deck with 2 decks (104 cards)
@@ -16,7 +18,7 @@ namespace OneZeroOne.Core.Models
                 Cards.Add(new Card(number, Suit.Diamonds));
                 Cards.Add(new Card(number, Suit.Clubs));
                 Cards.Add(new Card(number, Suit.Spades));
-                
+
                 Cards.Add(new Card(number, Suit.Hearts));
                 Cards.Add(new Card(number, Suit.Diamonds));
                 Cards.Add(new Card(number, Suit.Clubs));
@@ -35,8 +37,10 @@ namespace OneZeroOne.Core.Models
         public List<Player> Players { get; set; } = new List<Player>();
         public Guid ActivePlayerId { get; set; }
         public List<Card> Cards { get; private set; } = new List<Card>();
-        public int ActivePlayers  => Players.Count;
-
+        public Game(ILogger<Game> logger)
+        {
+            _logger = logger;
+        }
         public Result<Card> DrawCard(Guid playerId, Guid? discardPilePlayer = null)
         {
             var player = Players.Find(p => p.Id == playerId);
@@ -64,7 +68,6 @@ namespace OneZeroOne.Core.Models
                 player.AddCardToHand(cardresult.Value!);
             }
             return cardresult;
-
         }
 
         public Result<List<List<Card>>> DeclareHand(Guid playerId, List<List<Card>> cards)
@@ -160,6 +163,7 @@ namespace OneZeroOne.Core.Models
                     }
                 }
             }
+            DrawCard(ActivePlayerId);
             return Result<Guid>.Success(ActivePlayerId);
         }
 
@@ -213,9 +217,6 @@ namespace OneZeroOne.Core.Models
                 return Result<Card>.Success(card);
             }
 
-
         }
-        
-
     }
 }

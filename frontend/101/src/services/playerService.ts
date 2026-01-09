@@ -6,7 +6,7 @@ const PLAYER_KEY = 'player';
 let player: Player | null = null;
 
 
-export const getPlayerId = (): Player => {
+export const getPlayer = (): Player => {
     if (player) return player;
 
     // Try to retrieve from localStorage
@@ -17,7 +17,7 @@ export const getPlayerId = (): Player => {
     }
 
     // Generate new UUID
-    player = { name: '', id: uuidv4(), hand: [], discardPile: [] };
+    player = { name: '', id: uuidv4()};
     setPlayer(player);
     console.log('Generated new player ID:', player);
 
@@ -25,7 +25,7 @@ export const getPlayerId = (): Player => {
 };
 
 export const setPlayerName = async (name: string): Promise<void> => {
-    player ??= getPlayerId();
+    player ??= getPlayer();
     player.name = name;
     setPlayer(player);
 }

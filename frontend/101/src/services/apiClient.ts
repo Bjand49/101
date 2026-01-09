@@ -13,7 +13,7 @@ class ApiClient {
   public apiClient: AxiosInstance | undefined;
 
   private getClient(): AxiosInstance {
-    let baseurl = "http://localhost:5093";
+    let baseurl = "http://192.168.4.23:5000";
     const envBaseUrl = import.meta.env.VITE_BASE_URL;
 
     if (envBaseUrl) {
